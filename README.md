@@ -565,30 +565,67 @@ sub_product_screenshot_paths: [sub_shot]
 Используются в `app_availability_excepts` и `*_availability_only` / `*_availability_except`.
 Это **коды стран (ISO-3)**, НЕ локали.
 
-```
-AFG, AGO, AIA, ALB, ARE, ARG, ARM, ATG, AUS, AUT,
-AZE, BEL, BEN, BFA, BGR, BHR, BHS, BIH, BLR, BLZ,
-BMU, BOL, BRA, BRB, BRN, BTN, BWA, CAN, CHE, CHL,
-CHN, CIV, CMR, COD, COG, COL, CPV, CRI, CYM, XKS,
-CYP, CZE, DEU, DMA, DNK, DOM, DZA, ECU, EGY, ESP,
-EST, FIN, FJI, FRA, FSM, GAB, GBR, GEO, GHA, GMB,
-GNB, GRC, GRD, GTM, GUY, HKG, HND, HRV, HUN, IDN,
-IND, IRL, IRQ, ISL, ISR, ITA, JAM, JOR, JPN, KAZ,
-KEN, KGZ, KHM, KNA, KOR, KWT, LAO, LBN, LBR, LBY,
-LCA, LKA, LTU, LUX, LVA, MAC, MAR, MDA, MDG, MDV,
-MEX, MKD, MLI, MLT, MMR, MNE, MNG, MOZ, MRT, MSR,
-MUS, MWI, MYS, NAM, NER, NGA, NIC, NLD, NOR, NPL,
-NRU, NZL, OMN, PAK, PAN, PER, PHL, PLW, PNG, POL,
-PRT, PRY, QAT, ROU, RUS, RWA, SAU, SEN, SGP, SLB,
-SLE, SLV, SRB, STP, SUR, SVK, SVN, SWE, SWZ, SYC,
-TCA, TCD, THA, TJK, TKM, TON, TTO, TUN, TUR, TWN,
-TZA, UGA, UKR, URY, USA, UZB, VCT, VEN, VGB, VNM,
-VUT, YEM, ZAF, ZMB, ZWE
-```
-
-Примеры популярных: `USA` (США), `CAN` (Канада), `GBR` (Великобритания),
-`DEU` (Германия), `FRA` (Франция), `JPN` (Япония), `CHN` (Китай), `RUS` (Россия),
-`UKR` (Украина), `BRA` (Бразилия), `IND` (Индия).
+| Код | Страна | Код | Страна | Код | Страна |
+|---|---|---|---|---|---|
+| `AFG` | Афганистан | `AGO` | Ангола | `AIA` | Ангилья |
+| `ALB` | Албания | `ARE` | ОАЭ | `ARG` | Аргентина |
+| `ARM` | Армения | `ATG` | Антигуа и Барбуда | `AUS` | Австралия |
+| `AUT` | Австрия | `AZE` | Азербайджан | `BEL` | Бельгия |
+| `BEN` | Бенин | `BFA` | Буркина-Фасо | `BGR` | Болгария |
+| `BHR` | Бахрейн | `BHS` | Багамы | `BIH` | Босния и Герцеговина |
+| `BLR` | Беларусь | `BLZ` | Белиз | `BMU` | Бермуды |
+| `BOL` | Боливия | `BRA` | Бразилия | `BRB` | Барбадос |
+| `BRN` | Бруней | `BTN` | Бутан | `BWA` | Ботсвана |
+| `CAN` | Канада | `CHE` | Швейцария | `CHL` | Чили |
+| `CHN` | Китай | `CIV` | Кот-д’Ивуар | `CMR` | Камерун |
+| `COD` | ДР Конго | `COG` | Республика Конго | `COL` | Колумбия |
+| `CPV` | Кабо-Верде | `CRI` | Коста-Рика | `CYM` | Каймановы острова |
+| `XKS` | Косово | `CYP` | Кипр | `CZE` | Чехия |
+| `DEU` | Германия | `DMA` | Доминика | `DNK` | Дания |
+| `DOM` | Доминиканская Респ. | `DZA` | Алжир | `ECU` | Эквадор |
+| `EGY` | Египет | `ESP` | Испания | `EST` | Эстония |
+| `FIN` | Финляндия | `FJI` | Фиджи | `FRA` | Франция |
+| `FSM` | Микронезия | `GAB` | Габон | `GBR` | Великобритания |
+| `GEO` | Грузия | `GHA` | Гана | `GMB` | Гамбия |
+| `GNB` | Гвинея-Бисау | `GRC` | Греция | `GRD` | Гренада |
+| `GTM` | Гватемала | `GUY` | Гайана | `HKG` | Гонконг |
+| `HND` | Гондурас | `HRV` | Хорватия | `HUN` | Венгрия |
+| `IDN` | Индонезия | `IND` | Индия | `IRL` | Ирландия |
+| `IRQ` | Ирак | `ISL` | Исландия | `ISR` | Израиль |
+| `ITA` | Италия | `JAM` | Ямайка | `JOR` | Иордания |
+| `JPN` | Япония | `KAZ` | Казахстан | `KEN` | Кения |
+| `KGZ` | Киргизия | `KHM` | Камбоджа | `KNA` | Сент-Китс и Невис |
+| `KOR` | Южная Корея | `KWT` | Кувейт | `LAO` | Лаос |
+| `LBN` | Ливан | `LBR` | Либерия | `LBY` | Ливия |
+| `LCA` | Сент-Люсия | `LKA` | Шри-Ланка | `LTU` | Литва |
+| `LUX` | Люксембург | `LVA` | Латвия | `MAC` | Макао |
+| `MAR` | Марокко | `MDA` | Молдова | `MDG` | Мадагаскар |
+| `MDV` | Мальдивы | `MEX` | Мексика | `MKD` | Северная Македония |
+| `MLI` | Мали | `MLT` | Мальта | `MMR` | Мьянма |
+| `MNE` | Черногория | `MNG` | Монголия | `MOZ` | Мозамбик |
+| `MRT` | Мавритания | `MSR` | Монтсеррат | `MUS` | Маврикий |
+| `MWI` | Малави | `MYS` | Малайзия | `NAM` | Намибия |
+| `NER` | Нигер | `NGA` | Нигерия | `NIC` | Никарагуа |
+| `NLD` | Нидерланды | `NOR` | Норвегия | `NPL` | Непал |
+| `NRU` | Науру | `NZL` | Новая Зеландия | `OMN` | Оман |
+| `PAK` | Пакистан | `PAN` | Панама | `PER` | Перу |
+| `PHL` | Филиппины | `PLW` | Палау | `PNG` | Папуа — Новая Гвинея |
+| `POL` | Польша | `PRT` | Португалия | `PRY` | Парагвай |
+| `QAT` | Катар | `ROU` | Румыния | `RUS` | Россия |
+| `RWA` | Руанда | `SAU` | Саудовская Аравия | `SEN` | Сенегал |
+| `SGP` | Сингапур | `SLB` | Соломоновы острова | `SLE` | Сьерра-Леоне |
+| `SLV` | Сальвадор | `SRB` | Сербия | `STP` | Сан-Томе и Принсипи |
+| `SUR` | Суринам | `SVK` | Словакия | `SVN` | Словения |
+| `SWE` | Швеция | `SWZ` | Эсватини | `SYC` | Сейшелы |
+| `TCA` | Тёркс и Кайкос | `TCD` | Чад | `THA` | Таиланд |
+| `TJK` | Таджикистан | `TKM` | Туркменистан | `TON` | Тонга |
+| `TTO` | Тринидад и Тобаго | `TUN` | Тунис | `TUR` | Турция |
+| `TWN` | Тайвань | `TZA` | Танзания | `UGA` | Уганда |
+| `UKR` | Украина | `URY` | Уругвай | `USA` | США |
+| `UZB` | Узбекистан | `VCT` | Сент-Винсент и Гренадины | `VEN` | Венесуэла |
+| `VGB` | Британские Виргинские о-ва | `VNM` | Вьетнам | `VUT` | Вануату |
+| `YEM` | Йемен | `ZAF` | ЮАР | `ZMB` | Замбия |
+| `ZWE` | Зимбабве | | | | |
 
 ### Категории (appCategories)
 
