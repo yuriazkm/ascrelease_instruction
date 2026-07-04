@@ -403,6 +403,18 @@ release: yes
 (в порядке `*_localization_locales`), **внутренний = продукт** (в порядке
 `*_ref_names`).
 
+**Доступность по странам (`*_availability_only` / `*_availability_except`) —
+взаимоисключающие, указывайте максимум ОДИН:**
+
+| Что указано | Результат |
+|---|---|
+| ни один ключ (или оба пустые/отсутствуют) | продукт доступен во **всех** странах |
+| только `*_availability_only: [ USA, CAN ]` | доступен **только** в указанных странах |
+| только `*_availability_except: [ RUS ]` | доступен во **всех, кроме** указанных |
+
+Если указаны оба — приоритет у `only`, `except` игнорируется. Поэтому не указывайте
+оба одновременно. Значения — [коды территорий](#коды-территорий).
+
 #### Consumable IAP
 
 | Ключ | Формат | Описание |
@@ -413,8 +425,8 @@ release: yes
 | `consumable_localization_locales` | `[en-US, en-GB]` | Локали локализаций. |
 | `consumable_product_localization_names` | `[[..],[..]]` | Имена: `[локаль][продукт]`. |
 | `consumable_product_localization_descriptions` | `[[..],[..]]` | Описания. |
-| `consumable_product_availability_only` | `[USA, CAN]` | Только эти территории. |
-| `consumable_product_availability_except` | `[RUS]` | Все, кроме этих. |
+| `consumable_product_availability_only` | `[USA, CAN]` | Только эти территории (взаимоискл. с `except`). |
+| `consumable_product_availability_except` | `[RUS]` | Все, кроме этих (взаимоискл. с `only`). |
 | `consumable_product_screenshot_paths` | `[folder1, folder2]` | Папки со скрином ревью. |
 
 ```
@@ -425,11 +437,14 @@ consumable_product_prices: [0.99, 4.99]
 consumable_localization_locales: [en-US, en-GB]
 consumable_product_localization_names: [[100 Coins, 500 Coins], [100 Coins UK, 500 Coins UK]]
 consumable_product_localization_descriptions: [[Get 100 coins, Get 500 coins], [Get 100 coins, Get 500 coins]]
-consumable_product_availability_only: []
-consumable_product_availability_except: []
 consumable_product_screenshot_paths: [iap_shot_1, iap_shot_2]
 }
 ```
+
+> Доступность: в примере выше ключи `_availability_only` / `_availability_except`
+> не указаны → покупки доступны во **всех** странах. Чтобы ограничить, добавьте
+> **один** из них, например `consumable_product_availability_only: [ USA, CAN ]`
+> или `consumable_product_availability_except: [ RUS ]`.
 
 #### Non-consumable IAP
 
@@ -443,8 +458,6 @@ non_consumable_product_prices: [2.99]
 non_consumable_localization_locales: [en-US]
 non_consumable_product_localization_names: [[Remove Ads]]
 non_consumable_product_localization_descriptions: [[Remove all ads forever]]
-non_consumable_product_availability_only: []
-non_consumable_product_availability_except: []
 non_consumable_product_screenshot_paths: [iap_removeads]
 }
 ```
@@ -462,8 +475,8 @@ non_consumable_product_screenshot_paths: [iap_removeads]
 | `sub_product_localization_locales` | `[en-US]` | Локали. |
 | `sub_product_localization_names` | `[[..]]` | Имена: `[локаль][продукт]`. |
 | `sub_product_localization_descriptions` | `[[..]]` | Описания. |
-| `sub_product_availability_only` | `[USA]` | Только эти территории. |
-| `sub_product_availability_except` | `[RUS]` | Все, кроме этих. |
+| `sub_product_availability_only` | `[USA]` | Только эти территории (взаимоискл. с `except`). |
+| `sub_product_availability_except` | `[RUS]` | Все, кроме этих (взаимоискл. с `only`). |
 | `sub_product_screenshot_paths` | `[folder]` | Папки со скрином ревью. |
 
 ```
@@ -477,8 +490,6 @@ sub_three_days_trial: [0]
 sub_product_localization_locales: [en-US, en-GB]
 sub_product_localization_names: [[Monthly Premium, Yearly Premium], [Monthly UK, Yearly UK]]
 sub_product_localization_descriptions: [[Access all features, Save 20% yearly], [Access all, Save 20%]]
-sub_product_availability_only: []
-sub_product_availability_except: []
 sub_product_screenshot_paths: [sub_shot]
 }
 ```
@@ -699,8 +710,6 @@ consumable_product_prices: [0.99, 4.99]
 consumable_localization_locales: [en-US]
 consumable_product_localization_names: [[100 Coins, 500 Coins]]
 consumable_product_localization_descriptions: [[Get 100 coins, Get 500 coins]]
-consumable_product_availability_only: []
-consumable_product_availability_except: []
 consumable_product_screenshot_paths: [iap_shot_1, iap_shot_2]
 }
 
@@ -714,8 +723,6 @@ sub_three_days_trial: [0]
 sub_product_localization_locales: [en-US]
 sub_product_localization_names: [[Monthly Premium, Yearly Premium]]
 sub_product_localization_descriptions: [[Access all features, Save 20% yearly]]
-sub_product_availability_only: []
-sub_product_availability_except: []
 sub_product_screenshot_paths: [sub_shot]
 }
 ```
