@@ -308,7 +308,7 @@ screenshots_folder_name: screenshots_en_gb
 | `app_review_info_contact_last_name` | str | Фамилия (contactLastName). |
 | `app_review_info_contact_phone_number` | str | Телефон (contactPhone). |
 | `app_review_info_contact_email` | str | Email (contactEmail). |
-| `app_review_info_notes` | str | Заметки для ревьюера (notes). |
+| `app_review_info_notes` | str | Заметки для ревьюера (notes). **Многострочный** — продолжается до следующего ключа. |
 
 ```
 app_review_info_signin_required: no
@@ -357,6 +357,12 @@ setup_data_collection: yes
 | `app_availability_excepts` | list | Территории-исключения (см. ниже). |
 | `app_pre_order_enabled` | bool | `yes` → включить пре-ордер. |
 | `app_pre_order_release_date` | date | Дата релиза пре-ордера, `DD.MM.YYYY`. |
+| `disable_apple_silicon_macos_available` | bool | `yes` → выключить доступность на Apple Silicon Mac. |
+| `disable_apple_vision_pro_available` | bool | `yes` → выключить доступность на Apple Vision Pro. |
+
+> Чекбоксы «iPhone and iPad Apps on Apple Silicon Macs / Apple Vision Pro» в ASC
+> включены по умолчанию. `disable_*: yes` их **выключает** (через приватный
+> web-API). `no` или отсутствие ключа — не трогаем (останется включено).
 
 Логика `app_availability_excepts`:
 - `[]` — доступно во **всех** странах;
@@ -368,6 +374,8 @@ pricing_default: yes
 app_availability_excepts: []
 app_pre_order_enabled: yes
 app_pre_order_release_date: 01.12.2026
+disable_apple_silicon_macos_available: yes
+disable_apple_vision_pro_available: yes
 ```
 
 ### 13. Build
@@ -512,6 +520,7 @@ sub_product_screenshot_paths: [sub_shot]
 10. **age_ratings** — возрастной рейтинг (`age_ratings_setup`)
 11. **pricing** — цена (`pricing_default`)
 12. **availability** — доступность + пре-ордер (`app_availability_excepts` / `app_pre_order_enabled`)
+12a. **platform_availability** — выключение платформ (`disable_apple_silicon_macos_available` / `disable_apple_vision_pro_available`)
 13. **set_last_build** — билд + encryption (`set_last_build`)
 14. **data_collection** — App Privacy (`setup_data_collection`)
 15. **iap_consumable / iap_nonconsumable / subscriptions** — монетизация
