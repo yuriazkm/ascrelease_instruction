@@ -181,7 +181,9 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | `app_name` | str | Имя приложения. |
 | `sku` | str | SKU (обычно = bundle_id). |
 | `platform` | str | Платформа: `iOS` / `macOS` / `tvOS`. |
+| `app_card_id` | str | Короткий ид для имени API-ключа: `{app_name}{app_card_id}ApiKey`. |
 | `create_new_version` | bool | `yes` → создать новую версию App Store (1.0). |
+| `show_completion_log` | bool | `yes` → в конце вывести копируемый блок с созданными данными. |
 
 ```
 create_bundle: yes
@@ -190,7 +192,9 @@ bundle_id: com.company.app
 app_name: My Cool App
 sku: com.company.app
 platform: iOS
+app_card_id: wa409
 create_new_version: yes
+show_completion_log: yes
 ```
 
 ### 3. Общие ссылки
