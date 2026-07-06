@@ -239,6 +239,10 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | `sku` | str | SKU (обычно = bundle_id). |
 | `platform` | str | Платформа: `iOS` / `macOS` / `tvOS`. |
 | `app_card_id` | str | Короткий ид для имени API-ключа: `{app_name}{app_card_id}ApiKey`. |
+
+> **Company Name** при создании приложения (обязателен для аккаунтов-организаций)
+> задавать не нужно — если Apple его требует, имя компании берётся автоматически
+> из API (`provider.name` web-сессии).
 | `create_new_version` | bool | `yes` → создать новую версию App Store (1.0). |
 | `show_completion_log` | bool | `yes` → в конце вывести копируемый блок с созданными данными. |
 
@@ -407,6 +411,12 @@ screenshots_folder_name: screenshots_en_gb
 | `app_review_info_contact_phone_number` | str | Телефон (contactPhone). |
 | `app_review_info_contact_email` | str | Email (contactEmail). |
 | `app_review_info_notes` | str | Заметки для ревьюера (notes). **Многострочный** — продолжается до следующего ключа. |
+| `set_app_review_contact_as_account_holder` | bool | `yes` → имя/фамилию контакта взять из держателя аккаунта (ACCOUNT_HOLDER). |
+
+> При `set_app_review_contact_as_account_holder: yes` ключи `app_review_info_contact_name`
+> и `app_review_info_contact_last_name` **игнорируются** — вместо них подставляются
+> имя и фамилия держателя аккаунта (получаются через `GET /v1/users`, нужен
+> ключ с ролью Admin).
 
 ```
 app_review_info_signin_required: no
@@ -422,9 +432,21 @@ app_review_info_notes: No login required. Just open and play.
 | Ключ | Тип | Описание |
 |---|---|---|
 | `copyright_text` | str | Текст копирайта. Наличие ключа = обновляем. |
+| `set_copyright_as_account_holder` | bool | `yes` → copyright = имя+фамилия держателя (индивидуальный аккаунт). |
+| `set_copyright_as_company` | bool | `yes` → copyright = имя компании из API (корпоративный аккаунт). |
+
+> Любой из флагов **игнорирует** `copyright_text`. Приоритет: `set_copyright_as_company`
+> → `set_copyright_as_account_holder` → `copyright_text`.
+> - `set_copyright_as_company` берёт имя компании из API (`provider.name` web-сессии) —
+>   заполнять вручную ничего не нужно;
+> - `set_copyright_as_account_holder` берёт «Имя Фамилия» держателя (через `GET /v1/users`).
 
 ```
 copyright_text: 2026 My Company Inc.
+```
+или:
+```
+set_copyright_as_account_holder: yes
 ```
 
 ### 10. Age Rating
