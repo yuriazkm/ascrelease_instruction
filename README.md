@@ -291,6 +291,11 @@ app_name: My Cool App UK
 > `locale` можно указывать кодом (`en-US`) или ассоциативным именем (`EnglishUS`,
 > `English (U.S.)`) — сервис приведёт к коду через ассоциации локалей.
 
+> **Занятое имя.** Если имя приложения для локали уже занято, сервис
+> автоматически добавляет к нему невидимый символ (zero-width space) и повторяет
+> попытку — и так, пока длина не достигнет 30 символов (лимит App Store). Если
+> места не осталось — локаль помечается ошибкой, остальные продолжают.
+
 #### Имена из `.docx` (альтернатива `app_info`)
 
 | Ключ | Тип | Описание |
@@ -489,9 +494,24 @@ set_last_build: yes
 
 | Ключ | Тип | Описание |
 |---|---|---|
+| `release_type` | str | Тип релиза версии: `manual` / `automatic` / `scheduled`. |
+| `release_date` | date | Дата релиза для `scheduled` (`DD.MM.YYYY` или ISO). |
 | `release` | bool | `yes` → отправить приложение на модерацию (в самом конце). |
 
+`release_type` (официальный атрибут `releaseType` версии):
+- `manual` → `MANUAL` — релиз вручную после одобрения;
+- `automatic` → `AFTER_APPROVAL` — автоматически сразу после одобрения;
+- `scheduled` → `SCHEDULED` — на дату из `release_date` (обязательна).
+
 ```
+release_type: scheduled
+release_date: 01.12.2026
+release: yes
+```
+
+Ручной релиз:
+```
+release_type: manual
 release: yes
 ```
 
@@ -617,6 +637,7 @@ sub_product_screenshot_paths: [sub_shot]
 13. **set_last_build** — билд + encryption (`set_last_build`)
 14. **data_collection** — App Privacy (`setup_data_collection`)
 15. **iap_consumable / iap_nonconsumable / subscriptions** — монетизация
+15a. **release_type** — тип релиза версии (`release_type` [+ `release_date`])
 16. **release** — отправка на модерацию (`release`)
 
 Ошибка одной операции не останавливает остальные — статус запуска станет `partial`,
