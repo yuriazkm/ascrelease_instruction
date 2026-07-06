@@ -374,6 +374,22 @@ uses_third_party_content: no
 > и улучшена производительность
 > ```
 
+> **Заполнение из главной локали** — незаданные поля (`description`, `keywords`,
+> `whats_new`, `promotional_text`, `support_url`, `marketing_url`) берутся из
+> главной локали приложения. Явно указанные в блоке поля не трогаются.
+> - `fill_from_primary_if_empty: yes` — для **новых** локалей (которых ещё нет на Apple);
+> - `copy_to_exist_locales_from_primary_if_empty: yes` — для **уже существующих** локалей из списка.
+>
+> Можно включить оба (тогда заполняются и новые, и существующие).
+> ```
+> copy_to_exist_locales_from_primary_if_empty: yes
+> distribution_page: [
+> { locale: ar-SA },                      # все поля из главной локали
+> { locale: ca
+>   description_text: своё описание }      # всё из главной, кроме description
+> ]
+> ```
+
 ```
 distribution_page: [
 {
