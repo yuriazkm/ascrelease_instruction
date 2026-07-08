@@ -505,10 +505,15 @@ set_copyright_as_account_holder: yes
 | Ключ | Тип | Описание |
 |---|---|---|
 | `age_ratings_setup` | bool | `yes` → выставить минимальный возрастной рейтинг (все «нет»). |
+| `age_ratings_gambling` | bool | `yes` → Simulated Gambling (`gamblingSimulated`) = `FREQUENT_OR_INTENSE`; остальные поля остаются на минимуме. |
 
 ```
 age_ratings_setup: yes
+age_ratings_gambling: yes
 ```
+
+> `age_ratings_gambling` работает и обособленно (без `age_ratings_setup`) — шаг
+> всё равно выставит минимум + Simulated Gambling: FREQUENT.
 
 ### 11. Data Collection
 
@@ -704,7 +709,7 @@ sub_product_screenshot_paths: [sub_shot]
 7. **distribution** — тексты + скриншоты (`distribution_page`); либо только глобальные поля версии (`marketing_url`/`support_url`/`whats_new_unique`), если `distribution_page` не задан
 8. **app_review_info** — данные для ревью (любой `app_review_info_*`)
 9. **copyright** — копирайт (`copyright_text`)
-10. **age_ratings** — возрастной рейтинг (`age_ratings_setup`)
+10. **age_ratings** — возрастной рейтинг (`age_ratings_setup` / `age_ratings_gambling`)
 11. **pricing** — цена (`pricing_default`)
 12. **availability** — доступность + пре-ордер (`app_availability_excepts` / `app_pre_order_enabled`)
 12a. **platform_availability** — выключение платформ (`disable_apple_silicon_macos_available` / `disable_apple_vision_pro_available`)
