@@ -581,6 +581,11 @@ set_last_build: yes
 - `automatic` → `AFTER_APPROVAL` — автоматически сразу после одобрения;
 - `scheduled` → `SCHEDULED` — на дату из `release_date` (обязательна).
 
+> **Порядок с пре-ордером.** `release_type` выставляется **раньше** шага
+> availability (и пре-ордера). Причина: включённый пре-ордер сам фиксирует
+> `releaseType` у Apple, и последующая попытка его изменить падает с
+> `releaseType can not be modified`. Поэтому тип задаётся, пока это ещё разрешено.
+
 ```
 release_type: scheduled
 release_date: 01.12.2026
@@ -693,6 +698,18 @@ sub_product_screenshot_paths: [sub_shot]
 }
 ```
 
+> **Триал (`sub_three_days_trial`)** создаётся во **всех территориях доступности**
+> подписки (если подписка глобальная — во всех 175). Apple требует указывать
+> территорию для каждого оффера, поэтому оффер создаётся по каждой стране
+> автоматически — отдельно перечислять страны не нужно.
+
+> **Локализация группы** создаётся автоматически на главной локали приложения
+> (Group Display Name = `group_name`). Без неё Apple держит подписки в статусе
+> Missing Metadata — поэтому шаг выполняется всегда.
+
+> **Цены** раскатываются по территориям доступности подписки (или по всем, если
+> она глобальная) через equalization базовой цены (USA).
+
 ---
 
 ## Порядок выполнения
@@ -711,12 +728,12 @@ sub_product_screenshot_paths: [sub_shot]
 9. **copyright** — копирайт (`copyright_text`)
 10. **age_ratings** — возрастной рейтинг (`age_ratings_setup` / `age_ratings_gambling`)
 11. **pricing** — цена (`pricing_default`)
+11a. **release_type** — тип релиза версии (`release_type` [+ `release_date`]). Ставится **до** availability: включённый пре-ордер фиксирует `releaseType` на стороне Apple, после чего изменить его нельзя.
 12. **availability** — доступность + пре-ордер (`app_availability_excepts` / `app_pre_order_enabled`)
 12a. **platform_availability** — выключение платформ (`disable_apple_silicon_macos_available` / `disable_apple_vision_pro_available`)
 13. **set_last_build** — билд + encryption (`set_last_build`)
 14. **data_collection** — App Privacy (`setup_data_collection`)
 15. **iap_consumable / iap_nonconsumable / subscriptions** — монетизация
-15a. **release_type** — тип релиза версии (`release_type` [+ `release_date`])
 16. **release** — отправка на модерацию (`release`)
 
 Ошибка одной операции не останавливает остальные — статус запуска станет `partial`,
