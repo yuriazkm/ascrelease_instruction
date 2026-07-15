@@ -227,7 +227,7 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | `check_account_agreement` | bool | `yes` → до операций с приложением проактивно принять условия App Store Connect (olympus termsSignatures). Условия ASC также принимаются **автоматически**, если Apple вернёт 403 `REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED` — шаг подпишет их и повторит. |
 | `create_iap_api_key` | bool | `yes` → создать **In-App Purchase key**, сразу скачать и сохранить. |
 | `create_push_api_key` | bool | `yes` → создать **Push key (APNs Auth Key)**, сразу скачать и сохранить. |
-| `create_provising_profile` | bool | `yes` → создать **provisioning profile** (iOS App Store), скачать и сохранить. Алиас: `create_provisioning_profile`. |
+| `create_provisioning_profile` | bool | `yes` → создать **provisioning profile** (iOS App Store), скачать и сохранить. Алиас (устар.): `create_provising_profile`. |
 
 #### Ключи и профили: создание и скачивание
 
@@ -238,7 +238,7 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | **App Store Connect API key** | *(автоматически при создании аккаунта)* | `AuthKey_<KEY_ID>.p8` | web-логин (сценарий B) |
 | **In-App Purchase key** | `create_iap_api_key: yes` | `SubscriptionKey_<KEY_ID>.p8` | ASC → Integrations |
 | **Push key (APNs)** | `create_push_api_key: yes` | `AuthKey_<KEY_ID>.p8` | developer.apple.com → Keys |
-| **Provisioning profile** | `create_provising_profile: yes` | `<Name>.mobileprovision` | developer.apple.com → Profiles |
+| **Provisioning profile** | `create_provisioning_profile: yes` | `<Name>.mobileprovision` | developer.apple.com → Profiles |
 
 > **Для профиля ОБЯЗАТЕЛЕН `bundle_id`** — профиль создаётся под конкретный bundle
 > identifier. Бандл должен уже существовать на аккаунте либо создаваться в этом же
@@ -249,8 +249,11 @@ proxy_url: http://user:pass@1.2.3.4:8080
 ```
 create_iap_api_key: yes
 create_push_api_key: yes
-create_provising_profile: yes
+create_provisioning_profile: yes
 ```
+
+> Ключ `create_provising_profile` (с опечаткой) продолжает работать как алиас —
+> старые инструкции чинить не нужно.
 
 > **Где лежат и как скачать.** Файлы сохраняются на сервере **навсегда**:
 > ключи/профили запуска — в `ASC_ARTIFACTS_DIR` (по умолчанию
