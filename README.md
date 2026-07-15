@@ -225,6 +225,42 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | `issuer_id` | str | Issuer ID (сценарий C). |
 | `api_key_path` | str | Имя `.p8`-файла в архиве, формат `AuthKey_<KEY_ID>.p8`. |
 | `check_account_agreement` | bool | `yes` → до операций с приложением проактивно принять условия App Store Connect (olympus termsSignatures). Условия ASC также принимаются **автоматически**, если Apple вернёт 403 `REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED` — шаг подпишет их и повторит. |
+| `create_iap_api_key` | bool | `yes` → создать **In-App Purchase key**, сразу скачать и сохранить. |
+| `create_push_api_key` | bool | `yes` → создать **Push key (APNs Auth Key)**, сразу скачать и сохранить. |
+| `create_provising_profile` | bool | `yes` → создать **provisioning profile** (iOS App Store), скачать и сохранить. Алиас: `create_provisioning_profile`. |
+
+#### Ключи и профили: создание и скачивание
+
+Всего доступно **4 артефакта**, все скачиваются из истории запуска:
+
+| Артефакт | Ключ инструкции | Файл | Где создаётся |
+|---|---|---|---|
+| **App Store Connect API key** | *(автоматически при создании аккаунта)* | `AuthKey_<KEY_ID>.p8` | web-логин (сценарий B) |
+| **In-App Purchase key** | `create_iap_api_key: yes` | `SubscriptionKey_<KEY_ID>.p8` | ASC → Integrations |
+| **Push key (APNs)** | `create_push_api_key: yes` | `AuthKey_<KEY_ID>.p8` | developer.apple.com → Keys |
+| **Provisioning profile** | `create_provising_profile: yes` | `<Name>.mobileprovision` | developer.apple.com → Profiles |
+
+```
+create_iap_api_key: yes
+create_push_api_key: yes
+create_provising_profile: yes
+```
+
+> **Где лежат и как скачать.** Файлы сохраняются на сервере **навсегда**:
+> ключи/профили запуска — в `ASC_ARTIFACTS_DIR` (по умолчанию
+> `/var/www/asc/uploads/artifacts/<run_id>/`), основной API-ключ — в `ASC_P8_DIR`.
+> Временный архив чистится, файлы — нет. В карточке запуска (история Pipeline)
+> появляется блок **«Ключи и профили»** с кнопками скачивания; он доступен и
+> позже, при повторном заходе в историю.
+
+> **Важно:** приватные ключи (IAP и Push) Apple отдаёт **только один раз** — шаг
+> скачивает их сразу после создания и кладёт к себе. Повторно скачать с Apple
+> нельзя, только из нашей истории.
+
+> **Имена** формируются как `{AppName}{app_card_id}` + суффикс: `IapKey`,
+> `PushKey`, `Profile` (спецсимволы вырезаются). Push-ключ создаётся с сервисом
+> APNs, профиль — типа `IOS_APP_STORE` с автоподбором последнего issued
+> distribution-сертификата.
 
 ```
 account_name: dev@example.com
