@@ -252,9 +252,6 @@ create_push_api_key: yes
 create_provisioning_profile: yes
 ```
 
-> Ключ `create_provising_profile` (с опечаткой) продолжает работать как алиас —
-> старые инструкции чинить не нужно.
-
 > **Где лежат и как скачать.** Файлы сохраняются на сервере **навсегда**:
 > ключи/профили запуска — в `ASC_ARTIFACTS_DIR` (по умолчанию
 > `/var/www/asc/uploads/artifacts/<run_id>/`), основной API-ключ — в `ASC_P8_DIR`.
