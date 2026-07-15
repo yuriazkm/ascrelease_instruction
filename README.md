@@ -240,6 +240,12 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | **Push key (APNs)** | `create_push_api_key: yes` | `AuthKey_<KEY_ID>.p8` | developer.apple.com → Keys |
 | **Provisioning profile** | `create_provising_profile: yes` | `<Name>.mobileprovision` | developer.apple.com → Profiles |
 
+> **Для профиля ОБЯЗАТЕЛЕН `bundle_id`** — профиль создаётся под конкретный bundle
+> identifier. Бандл должен уже существовать на аккаунте либо создаваться в этом же
+> запуске (`create_bundle: yes`) — шаг профиля идёт **после** шага `bundle`. Если
+> бандла нет, шаг падает с понятной ошибкой. Также на аккаунте нужен изданный
+> **distribution-сертификат** (берётся последний issued автоматически).
+
 ```
 create_iap_api_key: yes
 create_push_api_key: yes
