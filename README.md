@@ -224,6 +224,7 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | `proxy_url` | str | Прокси (обязателен для нового аккаунта / если нет в БД). |
 | `issuer_id` | str | Issuer ID (сценарий C). |
 | `api_key_path` | str | Имя `.p8`-файла в архиве, формат `AuthKey_<KEY_ID>.p8`. |
+| `check_account_agreement` | bool | `yes` → до операций с приложением проактивно принять условия App Store Connect (olympus termsSignatures). Условия ASC также принимаются **автоматически**, если Apple вернёт 403 `REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED` — шаг подпишет их и повторит. |
 
 ```
 account_name: dev@example.com
@@ -345,6 +346,77 @@ app_name: My Cool App UK
 ```
 docx_format_app_names_file: app_names.docx
 ```
+
+#### Метаданные из `.xlsx` (альтернатива `app_info` + `distribution_page`)
+
+| Ключ | Тип | Описание |
+|---|---|---|
+| `xlsx_format_file` | str | Имя `.xlsx`-файла в архиве с метаданными по локалям. |
+
+Если ключ задан — **`app_info` игнорируется полностью**, а из **`distribution_page`**
+берутся **ТОЛЬКО** `locale`, `screenshots_folder_name`, `replace_screenshots`
+(остальные поля блока — `description`, `keywords`, `whats_new`, `promotional_text` —
+игнорируются). Имя, подзаголовок, ключевые слова и описание берутся из xlsx.
+
+Структура файла:
+- **каждый лист = локаль**, имя листа ассоциативное (`English (US)`, `German`, `Chinese traditional`, …);
+- служебные листы `Вопросы` и `Main` пропускаются; хвостовые пробелы в именах листов игнорируются;
+- данные — в **колонке G**, фиксированные строки:
+
+| Ячейка | Поле | Лимит |
+|---|---|---|
+| `G2` | Title → имя приложения | 30 |
+| `G5` | Subtitle → подзаголовок | 30 |
+| `G8` | Keywords → ключевые слова | 100 |
+| `G11` | Full Description → описание (объединённая `G11:G62`) | 4000 |
+
+> Строки 3/6/9 содержат **зачёркнутые (устаревшие)** варианты — они **не берутся**.
+
+> **Пустые локали пропускаются.** Если у листа все четыре поля пусты — локаль
+> не создаётся и не обновляется.
+
+Поддерживаемые имена листов (50 локалей): `Russian`, `English (US)`, `English (UK)`,
+`English (CA)`, `English (AU)`, `French (FR)`, `French (CA)`, `German`, `Vietnamese`,
+`Thai`, `Swedish`, `Catalan`, `Spanish (ES)`, `Korean`, `Slovak`, `Ukrainian`,
+`Romanian`, `Portuguese (PT)`, `Polish`, `Norwegian`, `Malay`, `Japanese`, `Italian`,
+`Hebrew`, `Indonesian`, `Hindi`, `Hungarian`, `Chinese traditional`, `Finnish`,
+`Danish`, `Czech`, `Turkish`, `Greek`, `Croatian`, `Chinese simplified`, `Arabic`,
+`Portuguese (BR)`, `Spanish (MX)`, `Dutch (NL)`, `Bangla`, `Gujarati`, `Kannada`,
+`Malayalam`, `Marathi`, `Odia`, `Punjabi`, `Slovenian`, `Tamil`, `Telugu`, `Urdu`.
+
+```
+xlsx_format_file: Workout Apps 6751191087 [Mark] iOS Meta.xlsx
+```
+
+**Скриншоты вместе с xlsx.** Скринов в xlsx нет, поэтому папки указываются через
+`distribution_page` — оттуда читаются только локаль и скрины, тексты берутся из xlsx:
+
+```
+xlsx_format_file: Workout Apps 6751191087 [Mark] iOS Meta.xlsx
+distribution_page: [
+{
+locale: en-US
+screenshots_folder_name: screenshots_en_us
+replace_screenshots: yes
+},
+{
+locale: de-DE
+screenshots_folder_name: screenshots_de
+}
+]
+```
+
+> Локали сопоставляются по коду. Если локаль указана в `distribution_page`, но в
+> xlsx она **пустая** — скрины пропускаются (набор локалей задаёт xlsx), в логе
+> будет предупреждение.
+
+> **`whats_new_unique` работает и с xlsx** — единый текст «Что нового» применяется
+> к каждой обрабатываемой локали.
+
+> **Ссылки** `privacy_policy_url` / `support_url` / `marketing_url` с xlsx
+> заполняются во всех локалях: privacy — в `app_info` + отдельным шагом `privacy`
+> по всем app-info-локалям; support/marketing — в каждой локали xlsx и доливаются
+> во все остальные локали версии (включая главную).
 
 ### 5. Категории
 
