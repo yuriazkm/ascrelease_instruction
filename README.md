@@ -167,15 +167,17 @@ proxy_url: http://user:pass@1.2.3.4:8080
     { "locale": "en-US", "description_text": "Line 1\nLine 2", "keywords": "game,fun",
       "screenshots_folder_name": "screenshots_en_us", "replace_screenshots": true }
   ],
-  "sub_products": {
-    "group_name": "Premium",
-    "sub_product_ref_names": ["Monthly", "Yearly"],
-    "sub_product_prices": ["9.99", "99.99"],
-    "sub_product_durations": ["ONE_MONTH", "ONE_YEAR"],
-    "sub_three_days_trial": [0],
-    "sub_product_localization_locales": ["en-US"],
-    "sub_product_localization_names": [["Monthly Premium", "Yearly Premium"]]
-  }
+  "sub_products": [
+    {
+      "group_name": "Premium",
+      "sub_product_ref_names": ["Monthly", "Yearly"],
+      "sub_product_prices": ["9.99", "99.99"],
+      "sub_product_durations": ["ONE_MONTH", "ONE_YEAR"],
+      "sub_three_days_trial": [0],
+      "sub_product_localization_locales": ["en-US"],
+      "sub_product_localization_names": [["Monthly Premium", "Yearly Premium"]]
+    }
+  ]
 }
 ```
 
@@ -224,7 +226,22 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | `proxy_url` | str | Прокси (обязателен для нового аккаунта / если нет в БД). |
 | `issuer_id` | str | Issuer ID (сценарий C). |
 | `api_key_path` | str | Имя `.p8`-файла в архиве, формат `AuthKey_<KEY_ID>.p8`. |
-| `check_account_agreement` | bool | `yes` → до операций с приложением проактивно принять условия App Store Connect (olympus termsSignatures). Условия ASC также принимаются **автоматически**, если Apple вернёт 403 `REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED` — шаг подпишет их и повторит. |
+| `check_account_agreement` | bool | `yes` → **до** операций с приложением проактивно принять все соглашения аккаунта. |
+
+> **Соглашения принимаются автоматически.** Если Apple вернёт 403
+> `FORBIDDEN.REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED` (на шаге `bundle` или `app`),
+> сервис сам примет соглашения и **повторит** запрос — ключ для этого не нужен.
+> `check_account_agreement: yes` лишь делает это заранее, до первой ошибки.
+>
+> Принимаются **два разных** соглашения:
+> 1. **Условия App Store Connect** — `POST /olympus/v1/termsSignatures`
+>    (web-сессия ASC). Если уже подписаны — Apple отвечает 409
+>    `TERMS_ALREADY_SIGNED`, это трактуется как успех.
+> 2. **Соглашения developer-аккаунта** (в т.ч. новая версия *Apple Developer
+>    Program License Agreement*) — на `developer.apple.com`:
+>    `getNotifications` → `notifications.agreementsOutstanding` →
+>    `listAgreements` → `acceptAgreements` → `checkPermissions`.
+>    Именно они обычно и вызывают 403 (ссылка `see: /business` в ошибке).
 | `create_iap_api_key` | bool | `yes` → создать **In-App Purchase key**, сразу скачать и сохранить. |
 | `create_push_api_key` | bool | `yes` → создать **Push key (APNs Auth Key)**, сразу скачать и сохранить. |
 | `create_provisioning_profile` | bool | `yes` → создать **provisioning profile** (iOS App Store), скачать и сохранить. Алиас (устар.): `create_provising_profile`. |
@@ -251,6 +268,9 @@ create_iap_api_key: yes
 create_push_api_key: yes
 create_provisioning_profile: yes
 ```
+
+> Ключ `create_provising_profile` (с опечаткой) продолжает работать как алиас —
+> старые инструкции чинить не нужно.
 
 > **Где лежат и как скачать.** Файлы сохраняются на сервере **навсегда**:
 > ключи/профили запуска — в `ASC_ARTIFACTS_DIR` (по умолчанию
@@ -714,8 +734,9 @@ release: yes
 
 ### 15. Монетизация
 
-Три объекта: `consumable_iap_products`, `non_consumable_iap_products`, `sub_products`.
-Внутри — параллельные списки (i-й элемент каждого списка относится к i-му продукту).
+`consumable_iap_products` и `non_consumable_iap_products` задаются одним объектом,
+а `sub_products` можно повторять для каждой группы подписок. Внутри каждого
+объекта — параллельные списки (i-й элемент каждого списка относится к i-му продукту).
 
 **Формат матриц локализаций:** `[[...], [...]]`, где **внешний список = локаль**
 (в порядке `*_localization_locales`), **внутренний = продукт** (в порядке
@@ -782,6 +803,36 @@ non_consumable_product_screenshot_paths: [iap_removeads]
 
 #### Подписки
 
+Каждый блок `sub_products` описывает отдельную группу. Чтобы создать несколько
+групп в `instruction.txt`, повторите блок нужное число раз. Порядок блоков
+сохраняется. Если группа с таким `group_name` уже существует, используется она,
+новая группа-дубликат не создаётся.
+
+В `instruction.json` значение `sub_products` — массив объектов. Старый JSON с
+одним объектом также поддерживается.
+
+Покупки и подписки обрабатываются как **upsert по `product_id`**:
+
+- если продукта ещё нет, он создаётся;
+- если продукт уже существует, обновляются reference name, перечисленные
+  локализации, указанная цена и явно заданная доступность;
+- новая локаль создаётся, существующая локаль обновляется; локали, которых нет в
+  инструкции, не удаляются;
+- если указан новый review screenshot, прежний скриншот заменяется; отсутствие
+  пути к скриншоту оставляет текущий файл без изменений;
+- явно указанный период существующей подписки также обновляется;
+- `product_id` и тип обычной IAP остаются неизменными.
+
+Для существующего продукта отсутствие `*_availability_only` и
+`*_availability_except` означает «не менять доступность». Чтобы явно вернуть все
+территории, укажите пустой список, например
+`sub_product_availability_except: []`.
+
+Для существующей автопродляемой подписки Apple применяет изменение цены как
+запланированное: pipeline удаляет прежние будущие изменения и назначает новую
+цену со следующего дня. Если нужная цена уже активна или запланирована, повторный
+запуск ничего не добавляет.
+
 | Ключ | Формат | Описание |
 |---|---|---|
 | `group_name` | str | Имя группы подписок. |
@@ -809,6 +860,18 @@ sub_product_localization_locales: [en-US, en-GB]
 sub_product_localization_names: [[Monthly Premium, Yearly Premium], [Monthly UK, Yearly UK]]
 sub_product_localization_descriptions: [[Access all features, Save 20% yearly], [Access all, Save 20%]]
 sub_product_screenshot_paths: [sub_shot]
+}
+
+sub_products: {
+group_name: PremiumAI
+sub_product_ref_names: [WeeklyAI, WeeklyTrialAI]
+sub_product_ids: [com.company.app.weekly_ai, com.company.app.weekly_trial_ai]
+sub_product_prices: [4.99, 4.99]
+sub_product_durations: [ONE_WEEK, ONE_WEEK]
+sub_three_days_trial: [1]
+sub_product_localization_locales: [en-US]
+sub_product_localization_names: [[Weekly AI, Weekly Trial AI]]
+sub_product_localization_descriptions: [[Premium AI weekly, Premium AI trial]]
 }
 ```
 
