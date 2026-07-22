@@ -1,4 +1,4 @@
-````# Pipeline — инструкция по `instruction.txt`
+# Pipeline — инструкция по `instruction.txt`
 
 Сервис **Pipeline** принимает ZIP-архив и полностью готовит iOS-приложение в App Store
 Connect: создаёт bundle и приложение, заполняет метаданные, скриншоты, возрастной
@@ -1195,4 +1195,3 @@ sub_product_localization_descriptions: [[Access all features, Save 20% yearly]]
 sub_product_screenshot_paths: [sub_shot]
 }
 ```
-````
