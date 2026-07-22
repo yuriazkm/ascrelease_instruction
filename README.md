@@ -315,6 +315,7 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | `app_card_id` | str | Короткий ид для имени API-ключа: `{app_name}{app_card_id}ApiKey`. |
 | `push_notifications` | bool | `yes` → включить capability **Push Notifications** на bundleId (офиц. API). Работает и при `create_bundle: yes`, и для уже существующего bundle. |
 | `create_new_version` | bool/str | `yes` → новая версия с **автоинкрементом** (1.0 → 1.1); либо явный номер `1.4` → создать/выставить именно его. |
+| `app_info_shared_secret` | bool | `yes` → сгенерировать новый app-specific shared secret через web-сессию; значение явно появится в live-логе и в `show_completion_log`. |
 | `show_completion_log` | bool | `yes` → в конце вывести копируемый блок с созданными данными. |
 
 Если при `create_bundle: yes` Apple сообщает, что App ID с таким идентификатором
@@ -343,6 +344,7 @@ platform: iOS
 app_card_id: wa409
 push_notifications: yes
 create_new_version: 1.4
+app_info_shared_secret: yes
 show_completion_log: yes
 ```
 
@@ -927,6 +929,7 @@ sub_product_localization_descriptions: [[Premium AI weekly, Premium AI trial]]
 
 1. **bundle** — создание bundle id и/или Push Notifications (`create_bundle` / `push_notifications`)
 2. **app** — создание/резолв приложения (всегда)
+2a. **app_info_shared_secret** — новый app-specific shared secret (`app_info_shared_secret`)
 3. **create_version** — новая версия (`create_new_version`: `yes`/номер)
 4. **app_info** — метаданные по локалям (`app_info` / `docx_format_app_names_file`)
 4a. **privacy** — Privacy Policy URL во все app-info-локали (`privacy_policy_url`, обособленно)
