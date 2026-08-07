@@ -11,6 +11,51 @@ Connect: создаёт bundle и приложение, заполняет ме�
 в имени, например `instruct.txt` или `instrction.txt`, запишет предупреждение
 в лог и продолжит запуск. Точные имена выше всегда имеют приоритет.
 
+## External API
+
+Pipeline можно запускать без браузера через версионированный HTTP API. Swagger
+доступен на том же хосте:
+
+```text
+https://ascrelease.ru/pipeline-api/docs/
+```
+
+HTTP Basic credentials: username — email пользователя сервиса, password — его
+обычный токен или отдельный отзывный Pipeline API token. Отдельный токен можно
+создать существующими credentials; полное значение возвращается только один раз:
+
+```bash
+curl -u 'user@example.com:CURRENT_USER_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"CI","expires_in_days":90}' \
+  https://ascrelease.ru/api/v1/pipeline/tokens
+```
+
+Запуск ZIP асинхронный. При повторе HTTP-запроса нужно сохранить тот же
+`Idempotency-Key`, чтобы сетевой timeout не создал второй run:
+
+```bash
+curl -u 'user@example.com:asc_pl_TOKEN' \
+  -H 'Idempotency-Key: release-2026-08-07-001' \
+  -F 'archive=@release.zip' \
+  https://ascrelease.ru/api/v1/pipeline/runs
+```
+
+`POST` возвращает `202 Accepted` и `run_id`. Статус и новые записи лога читаются
+отдельно:
+
+```bash
+curl -u 'user@example.com:asc_pl_TOKEN' \
+  https://ascrelease.ru/api/v1/pipeline/runs/512
+
+curl -u 'user@example.com:asc_pl_TOKEN' \
+  'https://ascrelease.ru/api/v1/pipeline/runs/512/logs?after=0&limit=200'
+```
+
+Если `required_action.type` равен `two_factor_code` или `bundle_id`, продолжение
+отправляется в соответствующий endpoint из Swagger. Запуски, логи и артефакты
+всегда ограничены владельцем. Старые cookie endpoints сайта сохранены.
+
 ---
 
 ## Содержание
@@ -308,7 +353,7 @@ proxy_url: http://user:pass@1.2.3.4:8080
 |---|---|---|
 | `create_bundle` | bool | `yes` → создать bundle id. |
 | `create_app` | bool | `yes` → создать приложение (иначе резолвится существующее). |
-| `bundle_id` | str | Bundle identifier, например `com.company.app`. |
+| `bundle_id` | str | Bundle identifier, например `com.company.app`. Можно не указывать, если в аккаунте ровно одно активное приложение. |
 | `app_name` | str | Имя приложения. |
 | `sku` | str | SKU (обычно = bundle_id). |
 | `platform` | str | Платформа: `iOS` / `macOS` / `tvOS`. |
@@ -317,6 +362,11 @@ proxy_url: http://user:pass@1.2.3.4:8080
 | `create_new_version` | bool/str | `yes` → новая версия с **автоинкрементом** (1.0 → 1.1); либо явный номер `1.4` → создать/выставить именно его. |
 | `app_info_shared_secret` | bool | `yes` → сгенерировать новый app-specific shared secret через web-сессию; значение явно появится в live-логе и в `show_completion_log`. |
 | `show_completion_log` | bool | `yes` → в конце вывести копируемый блок с созданными данными. |
+
+Если `bundle_id` не указан, pipeline запрашивает все доступные приложения
+аккаунта. При одном приложении его bundle выбирается автоматически и сохраняется
+в запуске; при нескольких приложениях нужно явно указать `bundle_id`. Если
+приложений нет, запуск завершается понятной ошибкой.
 
 Если при `create_bundle: yes` Apple сообщает, что App ID с таким идентификатором
 недоступен, pipeline переходит в статус `awaiting_bundle_id`. В интерфейсе можно
@@ -358,12 +408,18 @@ show_completion_log: yes
 | `privacy_policy_url` | str | URL политики конфиденциальности (App Information, во все app-info-локали). |
 | `support_url` | str | URL поддержки (во все локали версии). |
 | `marketing_url` | str | Маркетинговый URL (во все локали версии). |
+| `set_up_server_url` | str | Production App Store Server Notifications URL. Устанавливается через приватный ASC API с версией **V2**; ключ глобальный для приложения. Требуется полный `https://` URL. |
 
 ```
 privacy_policy_url: https://example.com/privacy
 support_url: https://example.com/support
 marketing_url: https://example.com
+set_up_server_url: https://server-url-sample.com
 ```
+
+`set_up_server_url` указывается один раз на верхнем уровне инструкции, а не
+внутри `sub_products`. Он изменяет production Server URL приложения; sandbox URL
+этим ключом не заполняется.
 
 > **Обособленная работа.** Каждый из этих ключей срабатывает сам по себе, даже
 > без `app_info`/`distribution_page`:
@@ -619,10 +675,18 @@ screenshots_folder_name: screenshots_en_gb
 > email — из `account_email` (или email в `account_name`). Нужен API-ключ с
 > ролью Admin.
 
-> Контактные поля не подставляются из данных аккаунта автоматически. Ключ
-> `app_review_info_signin_required: no` меняет только чекбокс Sign-in required.
-> Имя, фамилия, телефон и email отправляются в Apple только при наличии
-> соответствующих ключей выше или явного `set_app_review_contact_as_account_holder: yes`.
+> Сначала `app_review_info_signin_required: no` меняет только чекбокс Sign-in
+> required. Если для новой версии Apple требует создать App Review Detail с
+> полным контактом, сервис автоматически берёт имя и фамилию ACCOUNT_HOLDER,
+> телефон из `account_phone_number`, email из `account_email` (или email в
+> `account_name`) и повторяет запрос. После успешного создания сервис пробует
+> очистить временный контакт отдельным запросом. Если Apple не разрешает пустые
+> обязательные поля, контакт остаётся, но чекбокс будет снят и pipeline не упадёт.
+>
+> При наличии явных `app_review_info_contact_*` недостающие обязательные поля
+> дополняются данными аккаунта и сохраняются. При
+> `set_app_review_contact_as_account_holder: yes` полный контакт владельца всегда
+> сохраняется и попытка очистки не выполняется.
 
 ```
 app_review_info_signin_required: no
@@ -699,6 +763,17 @@ setup_data_collection: yes
 - `[]` — доступно во **всех** странах;
 - `[ USA, CAN ]` — все страны, **кроме** указанных;
 - ключ **не указан** — доступность не трогаем.
+
+При любой записи availability сервис всегда включает
+**Make available in future countries**. Текущие исключения сохраняются, а новые
+территории App Store будут добавляться автоматически.
+
+Новая availability создаётся одним официальным `POST /v2/appAvailabilities`,
+в котором передаются все текущие территории. Ответ `201 Created` считается
+подтверждением всей атомарной записи: дочерний GET Apple после создания может
+ещё некоторое время возвращать пустой список. Для уже существующей availability
+сервис повторно получает актуальный resource ID и ждёт синхронизации read-модели
+перед точечной коррекцией стран.
 
 ```
 pricing_default: yes
@@ -787,6 +862,9 @@ group_name: Premium
 
 Если указаны оба — приоритет у `only`, `except` игнорируется. Поэтому не указывайте
 оба одновременно. Значения — [коды территорий](#коды-территорий).
+
+При создании или изменении availability покупки/подписки флаг автоматической
+доступности во всех будущих территориях Apple всегда включается.
 
 #### Consumable IAP
 
@@ -929,7 +1007,8 @@ sub_product_localization_descriptions: [[Premium AI weekly, Premium AI trial]]
 
 1. **bundle** — создание bundle id и/или Push Notifications (`create_bundle` / `push_notifications`)
 2. **app** — создание/резолв приложения (всегда)
-2a. **app_info_shared_secret** — новый app-specific shared secret (`app_info_shared_secret`)
+2a. **server_url** — App Store Server Notifications URL V2 (`set_up_server_url`)
+2b. **app_info_shared_secret** — новый app-specific shared secret (`app_info_shared_secret`)
 3. **create_version** — новая версия (`create_new_version`: `yes`/номер)
 4. **app_info** — метаданные по локалям (`app_info` / `docx_format_app_names_file`)
 4a. **privacy** — Privacy Policy URL во все app-info-локали (`privacy_policy_url`, обособленно)
