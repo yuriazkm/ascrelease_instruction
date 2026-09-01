@@ -21,8 +21,10 @@ https://ascrelease.ru/pipeline-api/docs/
 ```
 
 HTTP Basic credentials: username — email пользователя сервиса, password — его
-обычный токен или отдельный отзывный Pipeline API token. Отдельный токен можно
-создать существующими credentials; полное значение возвращается только один раз:
+обычный токен или отдельный отзывный Pipeline API token. Администратор также может
+использовать свой email и глобальный `ADMIN_KEY` только в `/tokens`, чтобы выпустить
+отдельный токен. Сам pipeline по глобальному ключу не запускается. Полное значение
+нового токена возвращается только один раз:
 
 ```bash
 curl -u 'user@example.com:CURRENT_USER_TOKEN' \
@@ -52,9 +54,13 @@ curl -u 'user@example.com:asc_pl_TOKEN' \
   'https://ascrelease.ru/api/v1/pipeline/runs/512/logs?after=0&limit=200'
 ```
 
-Если `required_action.type` равен `two_factor_code` или `bundle_id`, продолжение
-отправляется в соответствующий endpoint из Swagger. Запуски, логи и артефакты
-всегда ограничены владельцем. Старые cookie endpoints сайта сохранены.
+При SMS-2FA сервер сначала до 30 секунд сам читает код из настроенного SMS-сервиса.
+В это время API возвращает обычный статус `running`, а ход ожидания виден в логах.
+`required_action.type=two_factor_code` и статус `awaiting_2fa` появляются только
+если автоматическое получение не удалось; тогда код отправляется в соответствующий
+endpoint из Swagger. `bundle_id` остаётся отдельным интерактивным действием.
+Запуски, логи и артефакты всегда ограничены владельцем. Старые cookie endpoints
+сайта сохранены.
 
 ---
 
@@ -174,10 +180,37 @@ api_key_path: AuthKey_ABCDE12345.p8
 proxy_url: http://user:pass@1.2.3.4:8080
 ```
 
-> **Про 2FA и сессию.** При web-логине код 2FA запрашивается через модалку. После
-> первого успешного логина cookie-сессия **сохраняется в БД** и переиспользуется —
+> **Про 2FA и сессию.** При web-логине pipeline сначала до 30 секунд ищет свежий
+> SMS-код во внутреннем сервисе по `account_phone_number`. Если код не найден или
+> SMS API недоступен, запуск переходит в `awaiting_2fa` и показывает прежнюю
+> модалку: код можно ввести вручную либо отменить запуск. После первого успешного
+> логина cookie-сессия **сохраняется в БД** и переиспользуется —
 > повторные запуски на том же аккаунте **не спрашивают 2FA**, пока сессия жива. Когда
 > Apple её протухнет — код запросится снова.
+
+Автополучение SMS настраивается в серверном `.env` (токен в лог не выводится):
+
+```dotenv
+# Свежий токен из файла имеет приоритет над этим начальным/резервным токеном.
+ASC_SMS_2FA_TOKEN=replace-with-bearer-token
+# Данные для автоматического обновления истёкшего токена:
+ASC_SMS_2FA_LOGIN_EMAIL=service-user@example.com
+ASC_SMS_2FA_LOGIN_PASSWORD=replace-with-password
+# Необязательные настройки:
+# ASC_SMS_2FA_LOGIN_URL=https://appempire.ru/admin/api/v1/auth/login
+# ASC_SMS_2FA_TOKEN_FILE=/var/www/asc/app/twilio_access_token.txt
+# ASC_SMS_2FA_BASE_URL=https://ukmessage.apptraff.net/api/v2/twilio
+# ASC_SMS_2FA_POLL_SECONDS=30
+# ASC_SMS_2FA_POLL_INTERVAL=2
+# ASC_SMS_2FA_REQUEST_TIMEOUT=5
+# ASC_SMS_2FA_CONTAINS=Apple
+```
+
+При каждом запросе токен читается в порядке
+`twilio_access_token.txt` → `ASC_SMS_2FA_TOKEN`. Если SMS API отвечает `401/403`,
+pipeline один раз авторизуется по email/password, сохраняет новый `access_token`
+в файл с правами `0600` и повторяет исходный запрос. При неудаче остаётся ручной
+ввод 2FA; pipeline из-за SMS-сервиса не падает.
 
 ---
 
@@ -605,6 +638,14 @@ uses_third_party_content: no
 | `promotional_text` | Промо-текст. |
 | `screenshots_folder_name` | Имя папки со скриншотами в архиве. |
 | `replace_screenshots` | `yes` → заменить существующие скрины, `no` → добавить. |
+
+Перед загрузкой в Apple pipeline локально пересоздаёт PNG/JPEG без
+EXIF/XMP/IPTC/GPS/ICC и служебных тегов экспортера, применяет EXIF orientation и
+сводит изображение к RGB. App Preview (`.mov`, `.mp4`, `.mpeg`) быстро
+пересобирается через FFmpeg без пользовательских metadata, глав и data-streams.
+Очистка обязательна: если она не удалась, исходный файл не загружается.
+По умолчанию используется `/usr/bin/ffmpeg`; другой путь можно задать через
+`ASC_FFMPEG_BIN`.
 
 > **Единый What's New на все локали** — верхнеуровневый ключ `whats_new_unique`
 > (многострочный). Если он задан, `whats_new` из блоков игнорируется, и на все
