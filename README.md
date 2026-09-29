@@ -54,7 +54,7 @@ curl -u 'user@example.com:asc_pl_TOKEN' \
   'https://ascrelease.ru/api/v1/pipeline/runs/512/logs?after=0&limit=200'
 ```
 
-При SMS-2FA сервер сначала до 30 секунд сам читает код из настроенного SMS-сервиса.
+При SMS-2FA сервер сначала до 2 минут сам читает код из настроенного SMS-сервиса.
 В это время API возвращает обычный статус `running`, а ход ожидания виден в логах.
 `required_action.type=two_factor_code` и статус `awaiting_2fa` появляются только
 если автоматическое получение не удалось; тогда код отправляется в соответствующий
@@ -180,7 +180,7 @@ api_key_path: AuthKey_ABCDE12345.p8
 proxy_url: http://user:pass@1.2.3.4:8080
 ```
 
-> **Про 2FA и сессию.** При web-логине pipeline сначала до 30 секунд ищет свежий
+> **Про 2FA и сессию.** При web-логине pipeline сначала до 2 минут ищет свежий
 > SMS-код во внутреннем сервисе по `account_phone_number`. Если код не найден или
 > SMS API недоступен, запуск переходит в `awaiting_2fa` и показывает прежнюю
 > модалку: код можно ввести вручную либо отменить запуск. После первого успешного
@@ -200,7 +200,7 @@ ASC_SMS_2FA_LOGIN_PASSWORD=replace-with-password
 # ASC_SMS_2FA_LOGIN_URL=https://appempire.ru/admin/api/v1/auth/login
 # ASC_SMS_2FA_TOKEN_FILE=/var/www/asc/app/twilio_access_token.txt
 # ASC_SMS_2FA_BASE_URL=https://ukmessage.apptraff.net/api/v2/twilio
-# ASC_SMS_2FA_POLL_SECONDS=30
+# ASC_SMS_2FA_POLL_SECONDS=120
 # ASC_SMS_2FA_POLL_INTERVAL=2
 # ASC_SMS_2FA_REQUEST_TIMEOUT=5
 # ASC_SMS_2FA_CONTAINS=Apple
@@ -963,6 +963,15 @@ non_consumable_product_screenshot_paths: [iap_removeads]
 
 В `instruction.json` значение `sub_products` — массив объектов. Старый JSON с
 одним объектом также поддерживается.
+
+Для каждой подписки из `sub_products`, новой или существующей, pipeline
+автоматически выбирает **No, don't allow multiseat purchases** в Purchase Options.
+Каналом продаж остаётся только **The App Store**; Apple Business и Apple School
+Manager отключаются. Отдельный ключ инструкции не нужен. Это приватный web API:
+нужна сохранённая действующая web-сессия либо `account_email` и `account_password`
+для входа (с обычной обработкой 2FA). Одного `.p8` ключа без web-сессии недостаточно.
+После сохранения pipeline повторно читает оба поля; если Apple не подтверждает
+их, подписка отмечается ошибкой. Подписки, отсутствующие в инструкции, не меняются.
 
 Покупки и подписки обрабатываются как **upsert по `product_id`**:
 
